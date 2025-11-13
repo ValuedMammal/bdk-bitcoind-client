@@ -107,3 +107,41 @@ impl Client {
         Ok(res.parse()?)
     }
 }
+
+#[cfg(test)]
+mod test_auth {
+    use super::*;
+
+    #[test]
+    fn test_auth_user_pass_get_user_pass() {
+        let auth = Auth::UserPass("user".to_string(), "pass".to_string());
+        let result = auth.get_user_pass().expect("failed to get user pass");
+
+        assert_eq!(result, (Some("user".to_string()), Some("pass".to_string())));
+    }
+
+    #[test]
+    fn test_auth_none_get_user_pass() {
+        let auth = Auth::None;
+        let result = auth.get_user_pass().expect("failed to get user pass");
+
+        assert_eq!(result, (None, None));
+    }
+
+    #[test]
+    fn test_auth_cookie_file_get_user_pass() {
+        let temp_dir = std::env::temp_dir();
+        let cookie_path = temp_dir.join("test_auth_cookie");
+        std::fs::write(&cookie_path, "testuser:testpass").expect("failed to write cookie");
+
+        let auth = Auth::CookieFile(cookie_path.clone());
+        let result = auth.get_user_pass().expect("failed to get user pass");
+
+        assert_eq!(
+            result,
+            (Some("testuser".to_string()), Some("testpass".to_string()))
+        );
+
+        std::fs::remove_file(cookie_path).ok();
+    }
+}
