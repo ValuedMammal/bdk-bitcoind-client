@@ -2,7 +2,10 @@
 
 use std::{fmt, io};
 
-use corepc_types::bitcoin::hex::{HexToArrayError, HexToBytesError};
+use corepc_types::bitcoin::{
+    consensus,
+    hex::{HexToArrayError, HexToBytesError},
+};
 use jsonrpc::serde_json;
 
 /// Result type alias for the RPC client.
@@ -11,6 +14,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Errors that can occur when using the Bitcoin RPC client.
 #[derive(Debug)]
 pub enum Error {
+    /// Hex deserialization error
+    DecodeHex(consensus::encode::FromHexError),
+
     /// Missing authentication credentials.
     MissingAuthentication,
 
@@ -49,6 +55,7 @@ impl fmt::Display for Error {
             Error::JsonRpc(e) => write!(f, "JSON-RPC error: {e}"),
             Error::Json(e) => write!(f, "JSON error: {e}"),
             Error::Io(e) => write!(f, "I/O error: {e}"),
+            Error::DecodeHex(e) => write!(f, "Hex deserialization error: {e}"),
         }
     }
 }
@@ -61,6 +68,7 @@ impl std::error::Error for Error {
             Error::Io(e) => Some(e),
             Error::HexToBytes(e) => Some(e),
             Error::HexToArray(e) => Some(e),
+            Error::DecodeHex(e) => Some(e),
             _ => None,
         }
     }
