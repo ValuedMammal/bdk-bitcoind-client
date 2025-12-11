@@ -148,7 +148,7 @@ fn test_get_block_hash_for_current_height() {
     let block_count = client.get_block_count().expect("failed to get block count");
 
     let block_hash = client
-        .get_block_hash(block_count.try_into().unwrap())
+        .get_block_hash(block_count)
         .expect("failed to get block hash");
 
     assert_eq!(block_hash.to_string().len(), 64);

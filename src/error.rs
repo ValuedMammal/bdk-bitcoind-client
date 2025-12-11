@@ -1,10 +1,13 @@
 //! Error types for the Bitcoin RPC client.
 
-use std::{fmt, io};
+use std::{fmt, io, num::TryFromIntError};
 
-use corepc_types::bitcoin::{
-    consensus,
-    hex::{HexToArrayError, HexToBytesError},
+use corepc_types::{
+    bitcoin::{
+        consensus::{self, encode::FromHexError},
+        hex::{HexToArrayError, HexToBytesError},
+    },
+    v30::GetBlockVerboseOneError,
 };
 use jsonrpc::serde_json;
 
@@ -16,6 +19,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     /// Hex deserialization error
     DecodeHex(consensus::encode::FromHexError),
+
+    /// Error converting `GetBlockVersboseOne` type into the model type
+    GetBlockVerboseOneError(GetBlockVerboseOneError),
 
     /// Missing authentication credentials.
     MissingAuthentication,
@@ -40,6 +46,9 @@ pub enum Error {
 
     /// I/O error (e.g., reading cookie file, network issues).
     Io(io::Error),
+
+    /// Error when converting an integer type to a smaller type due to overflow.
+    Overflow(TryFromIntError),
 }
 
 impl fmt::Display for Error {
@@ -56,6 +65,10 @@ impl fmt::Display for Error {
             Error::Json(e) => write!(f, "JSON error: {e}"),
             Error::Io(e) => write!(f, "I/O error: {e}"),
             Error::DecodeHex(e) => write!(f, "Hex deserialization error: {e}"),
+            Error::GetBlockVerboseOneError(e) => {
+                write!(f, "Error converting getblockverboseone: {e}")
+            }
+            Error::Overflow(e) => write!(f, "Integer conversion overflow error: {e}"),
         }
     }
 }
@@ -69,6 +82,8 @@ impl std::error::Error for Error {
             Error::HexToBytes(e) => Some(e),
             Error::HexToArray(e) => Some(e),
             Error::DecodeHex(e) => Some(e),
+            Error::GetBlockVerboseOneError(e) => Some(e),
+            Error::Overflow(e) => Some(e),
             _ => None,
         }
     }
@@ -96,5 +111,23 @@ impl From<HexToArrayError> for Error {
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
         Error::Io(e)
+    }
+}
+
+impl From<TryFromIntError> for Error {
+    fn from(e: TryFromIntError) -> Self {
+        Error::Overflow(e)
+    }
+}
+
+impl From<GetBlockVerboseOneError> for Error {
+    fn from(e: GetBlockVerboseOneError) -> Self {
+        Error::GetBlockVerboseOneError(e)
+    }
+}
+
+impl From<FromHexError> for Error {
+    fn from(e: FromHexError) -> Self {
+        Error::DecodeHex(e)
     }
 }
