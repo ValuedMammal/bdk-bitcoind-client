@@ -169,11 +169,10 @@ fn test_get_block_hash_invalid_height() {
 fn test_get_best_block_hash() {
     let client = test_client();
 
-    let best_hash = client
+    let best_block_hash = client
         .get_best_block_hash()
         .expect("failed to get best block hash");
-
-    assert_eq!(best_hash.to_string().len(), 64);
+    assert_eq!(best_block_hash.to_string().len(), 64);
 }
 
 #[test]

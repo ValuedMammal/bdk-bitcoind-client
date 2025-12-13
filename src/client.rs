@@ -6,17 +6,25 @@ use std::{
 
 use crate::error::Error;
 use crate::jsonrpc::minreq_http::Builder;
+#[cfg(not(feature = "29_0"))]
+use corepc_types::v30::GetBlockFilter;
 use corepc_types::{
     bitcoin::{
         block::Header, consensus::encode::deserialize_hex, Block, BlockHash, Transaction, Txid,
     },
-    model::{GetBlockCount, GetBlockFilter, GetBlockVerboseOne, GetRawMempool},
+    model::{GetBlockCount, GetRawMempool},
 };
 use jsonrpc::{
     serde,
     serde_json::{self, json},
     Transport,
 };
+
+#[cfg(feature = "28_0")]
+pub mod v28;
+
+#[cfg(feature = "29_0")]
+pub mod v29;
 
 /// Client authentication methods for the Bitcoin Core JSON-RPC server
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -34,6 +42,7 @@ impl Auth {
     /// required by JSON-RPC client transport.
     ///
     /// # Errors
+    ///
     /// Returns an error if the `CookieFile` cannot be read or invalid
     pub fn get_user_pass(self) -> Result<(Option<String>, Option<String>), Error> {
         match self {
@@ -65,11 +74,14 @@ impl Client {
     ///
     /// Requires authentication via username/password or cookie file.
     /// For connections without authentication, use `with_transport` instead.
+    ///
     /// # Arguments
+    ///
     /// * `url` - URL of the RPC server
     /// * `auth` - authentication method (`UserPass` or `CookieFile`).
     ///
     /// # Errors
+    ///
     /// * Returns `Error::MissingAuthentication` if `Auth::None` is provided.
     /// * Returns `Error::InvalidResponse` if the URL is invalid.
     /// * Returns errors related to reading the cookie file.
@@ -132,9 +144,11 @@ impl Client {
     /// Retrieves the raw block data for a given block hash (verbosity 0)
     ///
     /// # Arguments
+    ///
     /// * `block_hash`: The hash of the block to retrieve.
     ///
     /// # Returns
+    ///
     /// The deserialized `Block` struct.
     pub fn get_block(&self, block_hash: &BlockHash) -> Result<Block, Error> {
         let block_string: String = self.call("getblock", &[json!(block_hash), json!(0)])?;
@@ -142,24 +156,10 @@ impl Client {
         Ok(block)
     }
 
-    /// Retrieves the verbose JSON representation of a block (verbosity 1)
-    ///
-    /// # Arguments
-    /// * `block_hash`: The hash of the block to retrieve.
-    ///
-    /// # Returns
-    /// The verbose block data as a `GetBlockVerboseOne` struct.
-    pub fn get_block_verbose(&self, block_hash: &BlockHash) -> Result<GetBlockVerboseOne, Error> {
-        let block: corepc_types::v30::GetBlockVerboseOne =
-            self.call("getblock", &[json!(block_hash), json!(1)])?;
-        let block_model = block.into_model()?;
-
-        Ok(block_model)
-    }
-
     /// Retrieves the hash of the tip of the best block chain.
     ///
     /// # Returns
+    ///
     /// The `BlockHash` of the chain tip.
     pub fn get_best_block_hash(&self) -> Result<BlockHash, Error> {
         let best_block_hash: String = self.call("getbestblockhash", &[])?;
@@ -169,6 +169,7 @@ impl Client {
     /// Retrieves the number of blocks in the longest chain
     ///
     /// # Returns
+    ///
     /// The block count as a `u32`
     pub fn get_block_count(&self) -> Result<u32, Error> {
         let block_count: GetBlockCount = self.call("getblockcount", &[])?;
@@ -180,22 +181,27 @@ impl Client {
     /// Retrieves the block hash at a given height
     ///
     /// # Arguments
+    ///
     /// * `height`: The block height
     ///
     /// # Returns
+    ///
     /// The `BlockHash` for the given height
     pub fn get_block_hash(&self, height: u32) -> Result<BlockHash, Error> {
         let block_hash: String = self.call("getblockhash", &[json!(height)])?;
         Ok(block_hash.parse()?)
     }
 
-    /// Retrieves the compact block filter for a given block
+    /// Retrieve the `basic` BIP 157 content filter for a particular block
     ///
     /// # Arguments
+    ///
     /// * `block_hash`: The hash of the block whose filter is requested
     ///
     /// # Returns
+    ///
     /// The `GetBlockFilter` structure containing the filter data
+    #[cfg(not(feature = "29_0"))]
     pub fn get_block_filter(&self, block_hash: &BlockHash) -> Result<GetBlockFilter, Error> {
         let block_filter: GetBlockFilter = self.call("getblockfilter", &[json!(block_hash)])?;
         Ok(block_filter)
@@ -204,9 +210,11 @@ impl Client {
     /// Retrieves the raw block header for a given block hash.
     ///
     /// # Arguments
+    ///
     /// * `block_hash`: The hash of the block whose header is requested.
     ///
     /// # Returns
+    ///
     /// The deserialized `Header` struct
     pub fn get_block_header(&self, block_hash: &BlockHash) -> Result<Header, Error> {
         let header_string: String =
@@ -218,6 +226,7 @@ impl Client {
     /// Retrieves the transaction IDs of all transactions currently in the mempool
     ///
     /// # Returns
+    ///
     /// A vector of `Txid`s in the raw mempool
     pub fn get_raw_mempool(&self) -> Result<Vec<Txid>, Error> {
         let txids: GetRawMempool = self.call("getrawmempool", &[])?;
@@ -227,14 +236,62 @@ impl Client {
     /// Retrieves the raw transaction data for a given transaction ID
     ///
     /// # Arguments
+    ///
     /// * `txid`: The transaction ID to retrieve.
     ///
     /// # Returns
+    ///
     /// The deserialized `Transaction` struct
     pub fn get_raw_transaction(&self, txid: &Txid) -> Result<Transaction, Error> {
         let hex_string: String = self.call("getrawtransaction", &[json!(txid)])?;
         let transaction = deserialize_hex(&hex_string)?;
         Ok(transaction)
+    }
+}
+
+#[cfg(not(feature = "28_0"))]
+use corepc_types::{
+    model::{GetBlockHeaderVerbose, GetBlockVerboseOne},
+    v30,
+};
+
+#[cfg(not(feature = "28_0"))]
+impl Client {
+    /// Retrieves the verbose JSON representation of a block header (verbosity 1).
+    ///
+    /// # Arguments
+    ///
+    /// * `block_hash`: The hash of the block to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// The verbose header as a `GetBlockHeaderVerbose` struct.
+    pub fn get_block_header_verbose(
+        &self,
+        hash: &BlockHash,
+    ) -> Result<GetBlockHeaderVerbose, Error> {
+        let header_info: v30::GetBlockHeaderVerbose =
+            self.call("getblockheader", &[json!(hash)])?;
+        header_info
+            .into_model()
+            .map_err(Error::GetBlockHeaderVerboseError)
+    }
+
+    /// Retrieves the verbose JSON representation of a block (verbosity 1).
+    ///
+    /// # Arguments
+    ///
+    /// * `block_hash`: The hash of the block to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// The verbose block data as a `GetBlockVerboseOne` struct.
+    pub fn get_block_verbose(&self, hash: &BlockHash) -> Result<GetBlockVerboseOne, Error> {
+        let block_info: v30::GetBlockVerboseOne =
+            self.call("getblock", &[json!(hash), json!(1)])?;
+        block_info
+            .into_model()
+            .map_err(Error::GetBlockVerboseOneError)
     }
 }
 
