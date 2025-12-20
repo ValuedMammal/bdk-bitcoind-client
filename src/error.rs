@@ -4,11 +4,11 @@ use bitcoin::{
     consensus::encode::FromHexError,
     hex::{HexToArrayError, HexToBytesError},
 };
-use corepc_types::bitcoin;
 #[cfg(feature = "28_0")]
 use corepc_types::v17::{GetBlockHeaderVerboseError, GetBlockVerboseOneError};
 #[cfg(not(feature = "28_0"))]
 use corepc_types::v30::{GetBlockHeaderVerboseError, GetBlockVerboseOneError};
+use corepc_types::{bitcoin, v30::GetBlockFilterError};
 use jsonrpc::serde_json;
 use std::{fmt, io, num::TryFromIntError};
 
@@ -26,6 +26,9 @@ pub enum Error {
 
     /// Error modeling [`GetBlockHeaderVerbose`](corepc_types::model::GetBlockHeaderVerbose).
     GetBlockHeaderVerboseError(GetBlockHeaderVerboseError),
+
+    /// Error modeling [`GetBlockFilter`](corepc_types::model::GetBlockFilter)
+    GetBlockFilterError(GetBlockFilterError),
 
     /// Missing authentication credentials.
     MissingAuthentication,
@@ -70,10 +73,9 @@ impl fmt::Display for Error {
             Error::Io(e) => write!(f, "I/O error: {e}"),
             Error::DecodeHex(e) => write!(f, "Hex deserialization error: {e}"),
             Error::GetBlockHeaderVerboseError(e) => write!(f, "{e}"),
-            Error::GetBlockVerboseOneError(e) => {
-                write!(f, "Error converting getblockverboseone: {e}")
-            }
+            Error::GetBlockVerboseOneError(e) => write!(f, "{e}"),
             Error::Overflow(e) => write!(f, "Integer conversion overflow error: {e}"),
+            Error::GetBlockFilterError(e) => write!(f, "{e}"),
         }
     }
 }
@@ -89,6 +91,7 @@ impl std::error::Error for Error {
             Error::DecodeHex(e) => Some(e),
             Error::GetBlockVerboseOneError(e) => Some(e),
             Error::Overflow(e) => Some(e),
+            Error::GetBlockFilterError(e) => Some(e),
             _ => None,
         }
     }
