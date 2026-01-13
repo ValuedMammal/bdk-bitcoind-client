@@ -148,7 +148,7 @@ impl Client {
     /// The deserialized `Block` struct.
     pub fn get_block(&self, block_hash: &BlockHash) -> Result<Block, Error> {
         self.call::<String>("getblock", &[json!(block_hash), json!(0)])
-            .and_then(|block_hex| deserialize_hex(&block_hex).map_err(Error::DecodeHex))
+            .and_then(|blockhash_hex| deserialize_hex(&blockhash_hex).map_err(Error::DecodeHex))
     }
 
     /// Retrieves the hash of the tip of the best block chain.
@@ -158,7 +158,7 @@ impl Client {
     /// The `BlockHash` of the chain tip.
     pub fn get_best_block_hash(&self) -> Result<BlockHash, Error> {
         self.call::<String>("getbestblockhash", &[])
-            .and_then(|block_hex| block_hex.parse().map_err(Error::from))
+            .and_then(|blockhash_hex| blockhash_hex.parse().map_err(Error::HexToArray))
     }
 
     /// Retrieves the number of blocks in the longest chain
@@ -170,7 +170,7 @@ impl Client {
         self.call::<GetBlockCount>("getblockcount", &[])?
             .0
             .try_into()
-            .map_err(Error::Overflow)
+            .map_err(Error::TryFromInt)
     }
 
     /// Retrieves the block hash at a given height
@@ -184,7 +184,7 @@ impl Client {
     /// The `BlockHash` for the given height
     pub fn get_block_hash(&self, height: u32) -> Result<BlockHash, Error> {
         self.call::<String>("getblockhash", &[json!(height)])
-            .and_then(|block_hex| block_hex.parse().map_err(Error::from))
+            .and_then(|blockhash_hex| blockhash_hex.parse().map_err(Error::HexToArray))
     }
 
     /// Retrieve the `basic` BIP 157 content filter for a particular block
@@ -199,9 +199,7 @@ impl Client {
     pub fn get_block_filter(&self, block_hash: &BlockHash) -> Result<GetBlockFilter, Error> {
         let block_filter: v30::GetBlockFilter =
             self.call("getblockfilter", &[json!(block_hash)])?;
-        block_filter
-            .into_model()
-            .map_err(Error::GetBlockFilterError)
+        block_filter.into_model().map_err(Error::GetBlockFilter)
     }
 
     /// Retrieves the raw block header for a given block hash.
@@ -265,7 +263,7 @@ impl Client {
             self.call("getblockheader", &[json!(block_hash)])?;
         header_info
             .into_model()
-            .map_err(Error::GetBlockHeaderVerboseError)
+            .map_err(Error::GetBlockHeaderVerbose)
     }
 
     /// Retrieves the verbose JSON representation of a block (verbosity 1).
@@ -280,9 +278,7 @@ impl Client {
     pub fn get_block_verbose(&self, block_hash: &BlockHash) -> Result<GetBlockVerboseOne, Error> {
         let block_info: v30::GetBlockVerboseOne =
             self.call("getblock", &[json!(block_hash), json!(1)])?;
-        block_info
-            .into_model()
-            .map_err(Error::GetBlockVerboseOneError)
+        block_info.into_model().map_err(Error::GetBlockVerboseOne)
     }
 }
 
