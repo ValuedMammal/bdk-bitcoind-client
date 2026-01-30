@@ -73,6 +73,8 @@ impl fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 // Conversions from other error types
 impl From<jsonrpc::Error> for Error {
     fn from(e: jsonrpc::Error) -> Self {
