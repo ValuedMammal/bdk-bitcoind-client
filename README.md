@@ -1,8 +1,6 @@
 # bdk-bitcoind-client
 
-A minimal, experimental Bitcoin Core RPC client designed specifically for the Bitcoin Dev Kit (BDK). Unlike generic RPC wrappers, 
-`bdk-bitcoind-client` focuses on high-performance data emission and strict type safety, with built-in support for multiple Bitcoin 
-Core versions (v28.0 through v30.0+).
+A minimal Bitcoin Core RPC client designed specifically for the Bitcoin Dev Kit (BDK). It retrieves blockchain data from `bitcoind` over JSON-RPC and supports multiple versions of Bitcoin Core (v28.0 through v30.0+).
 
 ### Features 
 
@@ -14,17 +12,17 @@ Core versions (v28.0 through v30.0+).
 ### Installation
 
 Add this to your `Cargo.toml`:
-```
-// For the latest Bitcoin Core (v30.0+) 
+```toml
+# For the latest Bitcoin Core (v30.0+) 
 bdk-bitcoind-client = { version = "0.1.0" }
 
-// OR for older nodes (e.g., v28.x) 
+# OR for older nodes (e.g., v28.x) 
 bdk-bitcoind-client = { version = "0.1.0", default-features = false, features = ["28_0"] }
 ```
 
 ### Quick Start
 
-```
+```rust
 use bdk_bitcoind_client::{Auth, Client};
 use std::path::PathBuf;
 fn main() -> anyhow::Result<()> {
@@ -55,7 +53,7 @@ Bitcoin Core often changes its JSON-RPC response fields (e.g., adding the target
 | ----------------- | --------------------- | -------------------------------------------- | 
 | 30_0 (default)    | v30.x and newer       | Supports latest target and difficulty fields.|
 | 29_0              | v29.x                 | Aligned with v29 schema. |
-| 28_0v             | 28.x and older        | Omits newer fields |
+| 28_0             | v28.x and older        | Omits newer fields |
 
 
 ### Development and Testing
