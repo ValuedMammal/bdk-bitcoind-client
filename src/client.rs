@@ -83,17 +83,11 @@ impl Client {
             .map_err(|e| Error::InvalidUrl(format!("{e}")))?
             .timeout(std::time::Duration::from_secs(60));
 
-        builder = match auth {
-            Auth::UserPass(user, pass) => builder.basic_auth(user, Some(pass)),
-            Auth::CookieFile(path) => {
-                let cookie = std::fs::read_to_string(path)
-                    .map_err(|_| Error::InvalidCookieFile)?
-                    .trim()
-                    .to_string();
-                builder.cookie_auth(cookie)
-            }
-        };
+        let (user, pass) = auth.get_user_pass()?;
 
+        if let Some(username) = user {
+            builder = builder.basic_auth(username, pass);
+        }
         Ok(Self {
             inner: jsonrpc::Client::with_transport(builder.build()),
         })
@@ -307,7 +301,6 @@ mod test_auth {
         let cookie_path = PathBuf::from("/nonexistent/path/to/cookie");
 
         let result = Client::with_auth(dummy_url, Auth::CookieFile(cookie_path));
-
-        assert!(matches!(result, Err(Error::InvalidCookieFile)));
+        assert!(matches!(result, Err(Error::Io(_))));
     }
 }
