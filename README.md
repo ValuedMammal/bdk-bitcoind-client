@@ -77,8 +77,8 @@ To see a list of available recipes: `just`
 
 Licensed under either of
 
-* Apache License, Version 2.0 (<https://www.apache.org/licenses/LICENSE-2.0>)
-* MIT license ([LICENSE](LICENSE) or <https://opensource.org/licenses/MIT>)
+* Apache License, Version 2.0 ([Apache 2.0](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+* MIT License ([MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 at your option.
 
