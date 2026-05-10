@@ -11,12 +11,6 @@ readme = "README.md"
 edition = "2024"
 rust-version = "1.85.0"
 
-[features]
-default = ["30_0"]
-30_0 = []
-29_0 = []
-28_0 = []
-
 [dependencies]
 corepc-types = { version = "0.12.0", features = ["default"]}
 jsonrpc = { version = "0.20.0", features = ["bitreq_http"] }
@@ -33,12 +27,18 @@ tar = { version = "0.4.43" } # blame: corepc-node
 filetime = { version = "0.2.8" } # blame: corepc-node
 log = { version = "0.4.14" } # blame: corepc-node
 
+[features]
+default = ["28_0"]
+30_0 = ["29_0"]
+29_0 = ["28_0"]
+28_0 = []
+
 [package.metadata.rbmt.toolchains]
 stable = "1.95.0"
 nightly = "nightly"
 
 [package.metadata.rbmt.test]
-#exclude_features = ["default"]
+exclude_features = ["default"]
 
 # Allow multiple versions of the same package in the dependency tree.
 [package.metadata.rbmt.lint]

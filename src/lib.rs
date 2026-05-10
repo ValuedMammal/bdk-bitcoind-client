@@ -12,5 +12,8 @@ mod error;
 pub use client::*;
 pub use error::*;
 
+#[cfg(all(feature = "28_0", not(feature = "29_0")))]
+pub mod v28;
+
 pub use corepc_types;
 pub use jsonrpc;

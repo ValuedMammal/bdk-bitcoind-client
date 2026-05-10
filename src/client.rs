@@ -20,9 +20,6 @@ use jsonrpc::{
     serde_json::{self, json},
 };
 
-#[cfg(feature = "28_0")]
-pub mod v28;
-
 /// Client authentication methods for the Bitcoin Core JSON-RPC server
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Auth {
@@ -225,10 +222,10 @@ impl Client {
     }
 }
 
-#[cfg(not(feature = "28_0"))]
+#[cfg(feature = "29_0")]
 use corepc_types::model::{GetBlockHeaderVerbose, GetBlockVerboseOne};
 
-#[cfg(not(feature = "28_0"))]
+#[cfg(feature = "29_0")]
 impl Client {
     /// Retrieves the verbose JSON representation of a block header (verbosity 1).
     ///

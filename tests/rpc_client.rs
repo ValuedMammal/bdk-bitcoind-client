@@ -155,6 +155,7 @@ fn test_get_block_after_mining() {
 }
 
 #[test]
+#[cfg(feature = "29_0")]
 fn test_get_block_verbose() {
     let env = TestEnv::setup().unwrap();
 
@@ -202,6 +203,7 @@ fn test_get_block_header() {
 }
 
 #[test]
+#[cfg(feature = "29_0")]
 fn test_get_block_header_verbose() {
     let TestEnv {
         client,
