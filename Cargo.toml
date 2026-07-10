@@ -36,7 +36,7 @@ bitreq = ["dep:corepc-types", "jsonrpc/bitreq_http"]
 28_0 = []
 
 [package.metadata.rbmt.toolchains]
-stable = "1.95.0"
+stable = "1.96.0"
 nightly = "nightly"
 
 [package.metadata.rbmt.test]
